@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:spaceloi/data/models/launch.model.dart';
-import 'package:spaceloi/ui/data/api/launch.service.dart';
+import 'package:spaceloi/data/services/AppService.dart';
+import 'package:spaceloi/ui/api/launch.service.dart';
 import 'package:spaceloi/ui/widgets/launch_card_grid.widget.dart';
 import 'package:spaceloi/ui/widgets/launch_card_list.widget.dart';
 
@@ -13,20 +14,24 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
 
   List<Launch> launches = [];
+  List<String> favorites = [];
   bool isLoading = true;
   bool isGridView = true;
+  bool showOnlyFavorites = false;
 
   @override
   void initState() {
     super.initState();
-    _loadLaunches();
+    _loadData();
   }
 
-  Future<void> _loadLaunches() async {
+  Future<void> _loadData() async {
     try {
       final data = await LaunchService.getLaunches();
+      final favs = await AppService.getFavorites();
       setState(() {
         launches = data;
+        favorites = favs;
         isLoading = false;
       });
     } catch (e) {
@@ -36,12 +41,40 @@ class _HomePageState extends State<HomePage> {
       });
     }
   }
+
+  Future<void> _reloadFavorites() async {
+    final favs = await AppService.getFavorites();
+    if (mounted) {
+      setState(() {
+        favorites = favs;
+      });
+    }
+  }
+
+  List<Launch> get filteredLaunches {
+    if (showOnlyFavorites) {
+      return launches.where((launch) => favorites.contains(launch.id)).toList();
+    }
+    return launches;
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('Spaceloi'),
+        actions: [
+          IconButton(
+            icon: Icon(
+              showOnlyFavorites ? Icons.favorite : Icons.favorite_border,
+              color: showOnlyFavorites ? Colors.red : null,
+            ),
+            onPressed: () {
+              setState(() {
+                showOnlyFavorites = !showOnlyFavorites;
+              });
+            },
+          ),
+        ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -52,15 +85,19 @@ class _HomePageState extends State<HomePage> {
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
         ),
-        itemCount: launches.length,
+        itemCount: filteredLaunches.length,
         itemBuilder: (context, index) {
-          return LaunchCardGrid(launch: launches[index]);
+          return LaunchCardGrid(
+            launch: filteredLaunches[index],
+            onReturn: _reloadFavorites,);
         },
       )
           : ListView.builder(
-        itemCount: launches.length,
+        itemCount: filteredLaunches.length,
         itemBuilder: (context, index) {
-          return LaunchCardList(launch: launches[index]);
+          return LaunchCardList(
+            launch: filteredLaunches[index],
+            onReturn: _reloadFavorites,);
         },
       ),
       floatingActionButton: FloatingActionButton(

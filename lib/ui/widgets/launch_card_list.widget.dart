@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:spaceloi/data/models/launch.model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:spaceloi/ui/pages/launch_details.page.dart';
+import 'package:spaceloi/utils/Date_formatter.dart';
 
 class LaunchCardList extends StatefulWidget {
-  const LaunchCardList({super.key, required this.launch});
+  const LaunchCardList({
+    super.key,
+    required this.launch,
+    required this.onReturn,
+  });
 
   final Launch launch;
+  final VoidCallback onReturn;
 
   @override
   State<LaunchCardList> createState() => _LaunchCardListState();
@@ -22,7 +28,7 @@ class _LaunchCardListState extends State<LaunchCardList> {
             MaterialPageRoute(
               builder: (context) => LaunchDetailsPage(launch: widget.launch),
             ),
-          );
+          ).then((_) => widget.onReturn());
         },
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -65,10 +71,7 @@ class _LaunchCardListState extends State<LaunchCardList> {
                       placeholder: (context, url) => const Center(
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
-                      errorWidget: (context, url, error) => Image.asset(
-                        'lib/data/image/defaultPatch.png',
-                        fit: BoxFit.cover,
-                      ),
+                      errorWidget: (context, url, error) => Icon(Icons.rocket_launch, size: 50, color: Colors.black),
                       memCacheWidth: 160,
                     ),
                   ),
@@ -99,7 +102,7 @@ class _LaunchCardListState extends State<LaunchCardList> {
                           ),
                           const SizedBox(width: 6.0),
                           Text(
-                            widget.launch.date.toLocal().toString().split(' ').first,
+                            " ${DateFormatter.formatShortDate(widget.launch.date)}",
                             style: const TextStyle(
                               fontSize: 14.0,
                               color: Color(0xFF757575),

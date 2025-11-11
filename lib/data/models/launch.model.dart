@@ -10,7 +10,8 @@ class Launch {
     required this.patchUrl,
     required this.articleUrl,
     required this.imagesUrl,
-    required this.id
+    required this.id,
+    required this.rocketId,
   });
 
   final String name;
@@ -21,6 +22,7 @@ class Launch {
   final String articleUrl;
   final List<String> imagesUrl;
   final String id;
+  final String rocketId;
 
   static Launch mock() => Launch(
         name: 'Falcon 9',
@@ -36,7 +38,8 @@ class Launch {
           'https://farm9.staticflickr.com/8571/16699496805_bf39747618_o.jpg',
           "https://farm9.staticflickr.com/8612/16848173281_035bdc6009_o.jpg"
         ],
-        id: '5e9d0d95eda69955f709d1eb',
+        id: 'launch_mock_id',
+        rocketId: '5e9d0d95eda69955f709d1eb',
   );
 
   factory Launch.fromJson(Map<String, dynamic> json) {
@@ -52,7 +55,8 @@ class Launch {
       imagesUrl: (json['links']['flickr']['original'] as List)
           .map((img) => img as String)
           .toList(),
-      id: json['rocket'],
+      id: json['id'],
+      rocketId: json['rocket'],
     );
   }
 

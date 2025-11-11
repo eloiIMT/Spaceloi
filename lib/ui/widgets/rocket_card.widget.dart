@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spaceloi/data/models/rocket.model.dart';
+import 'package:spaceloi/utils/Date_formatter.dart';
 
 class RocketCard extends StatelessWidget {
   const RocketCard({super.key, required this.rocket});
@@ -59,7 +60,7 @@ class RocketCard extends StatelessWidget {
                   const SizedBox(height: 8.0),
                   _buildSpecRow(Icons.check_circle_outline, 'Taux de réussite', '${rocket.successRatePct.toStringAsFixed(1)}%'),
                   const SizedBox(height: 8.0),
-                  _buildSpecRow(Icons.rocket_launch, 'Premier vol', rocket.firstFlight.toString()),
+                  _buildSpecRow(Icons.rocket_launch, 'Premier vol', DateFormatter.formatShortDate(rocket.firstFlight)),
                 ],
               ),
             ),

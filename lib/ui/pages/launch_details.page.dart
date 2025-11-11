@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:spaceloi/data/models/launch.model.dart';
 import 'package:spaceloi/data/models/rocket.model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:spaceloi/ui/data/api/launch.service.dart';
+import 'package:spaceloi/data/services/AppService.dart';
+import 'package:spaceloi/ui/api/launch.service.dart';
 import 'package:spaceloi/ui/widgets/rocket_card.widget.dart';
+import 'package:spaceloi/utils/Date_formatter.dart';
 
 class LaunchDetailsPage extends StatefulWidget {
   const LaunchDetailsPage({super.key, required this.launch});
@@ -17,16 +19,18 @@ class LaunchDetailsPage extends StatefulWidget {
 class _LaunchDetailsPageState extends State<LaunchDetailsPage> {
   Rocket? rocket;
   bool isLoadingRocket = true;
+  bool isFavorite = false;
 
   @override
   void initState() {
     super.initState();
     _loadRocket();
+    _checkFavorite();
   }
 
   Future<void> _loadRocket() async {
     try {
-      final data = await LaunchService.getRocketById(widget.launch.id);
+      final data = await LaunchService.getRocketById(widget.launch.rocketId);
       setState(() {
         rocket = data;
         isLoadingRocket = false;
@@ -39,6 +43,24 @@ class _LaunchDetailsPageState extends State<LaunchDetailsPage> {
     }
   }
 
+  Future<void> _checkFavorite() async {
+    final result = await AppService.isFavorite(widget.launch.id);
+    setState(() {
+      isFavorite = result;
+    });
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (isFavorite) {
+      await AppService.removeFavorite(widget.launch.id);
+    } else {
+      await AppService.addFavorite(widget.launch.id);
+    }
+    setState(() {
+      isFavorite = !isFavorite;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,20 +69,34 @@ class _LaunchDetailsPageState extends State<LaunchDetailsPage> {
           SliverAppBar(
             expandedHeight: 300.0,
             pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                widget.launch.name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  shadows: [
-                    Shadow(
-                      blurRadius: 8.0,
-                      color: Colors.black54,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
+            leading: Container(
+              margin: const EdgeInsets.all(8.0),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+            actions: [
+              Container(
+                margin: const EdgeInsets.all(8.0),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: Colors.red,
+                  ),
+                  onPressed: _toggleFavorite,
                 ),
               ),
+            ],
+            flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -69,23 +105,8 @@ class _LaunchDetailsPageState extends State<LaunchDetailsPage> {
                         ? widget.launch.patchUrl
                         : widget.launch.imagesUrl.first,
                     fit: BoxFit.cover,
-                    errorWidget: (context, url, error) => Image.asset(
-                      'lib/data/image/defaultPatch.png',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.7),
-                        ],
-                      ),
-                    ),
-                  ),
+                    errorWidget: (context, url, error) => Icon(Icons.rocket_launch, size: 300, color: Colors.black)
+                  )
                 ],
               ),
             ),
@@ -94,10 +115,16 @@ class _LaunchDetailsPageState extends State<LaunchDetailsPage> {
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  _buildStatusCard(),
-                  const SizedBox(height: 16.0),
+                  Text(
+                    widget.launch.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 30.0,
+                    ),
+                  ),
+                  const SizedBox(height: 8.0),
                   _buildInfoSection(),
                   const SizedBox(height: 16.0),
                   if (widget.launch.details != null) ...[
@@ -107,77 +134,6 @@ class _LaunchDetailsPageState extends State<LaunchDetailsPage> {
                   _buildRocketSection(),
                 ],
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusCard() {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: widget.launch.success == true
-            ? Colors.green.shade50
-            : widget.launch.success == false
-            ? Colors.red.shade50
-            : Colors.orange.shade50,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: widget.launch.success == true
-              ? Colors.green
-              : widget.launch.success == false
-              ? Colors.red
-              : Colors.orange,
-          width: 2.0,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            widget.launch.success == true
-                ? Icons.check_circle
-                : widget.launch.success == false
-                ? Icons.cancel
-                : Icons.schedule,
-            color: widget.launch.success == true
-                ? Colors.green
-                : widget.launch.success == false
-                ? Colors.red
-                : Colors.orange,
-            size: 32.0,
-          ),
-          const SizedBox(width: 16.0),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.launch.success == true
-                      ? 'Lancement réussi'
-                      : widget.launch.success == false
-                      ? 'Lancement échoué'
-                      : 'Lancement à venir',
-                  style: TextStyle(
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.bold,
-                    color: widget.launch.success == true
-                        ? Colors.green.shade900
-                        : widget.launch.success == false
-                        ? Colors.red.shade900
-                        : Colors.orange.shade900,
-                  ),
-                ),
-                const SizedBox(height: 4.0),
-                Text(
-                  widget.launch.date.toLocal().toString().split('.').first,
-                  style: TextStyle(
-                    fontSize: 14.0,
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-              ],
             ),
           ),
         ],
@@ -204,9 +160,9 @@ class _LaunchDetailsPageState extends State<LaunchDetailsPage> {
               ),
             ),
             const SizedBox(height: 12.0),
-            _buildInfoRow(Icons.rocket_launch, 'Numéro de vol', '#0'),
+            _buildInfoRow(Icons.rocket_launch, 'Identifiant du lancement', '${widget.launch.id}'),
             const Divider(),
-            _buildInfoRow(Icons.calendar_today, 'Date UTC', widget.launch.date.toUtc().toString().split('.').first),
+            _buildInfoRow(Icons.calendar_today, 'Date', DateFormatter.formatDateTime(widget.launch.date)),
           ],
         ),
       ),
@@ -281,7 +237,7 @@ class _LaunchDetailsPageState extends State<LaunchDetailsPage> {
 
   Widget _buildRocketSection() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const Text(
           'Fusée',
