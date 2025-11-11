@@ -19,6 +19,7 @@ class LaunchService {
 
   static Future<Rocket> getRocketById(String id) async {
     final response = await http.get(Uri.parse('$baseUrl/rockets/$id'));
+    print("$baseUrl/rockets/$id");
     if (response.statusCode != 200) {
       throw Exception('Failed to load rocket');
     }

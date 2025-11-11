@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:spaceloi/data/models/launch.model.dart';
 import 'package:spaceloi/ui/data/api/launch.service.dart';
 import 'package:spaceloi/ui/widgets/launch_card_grid.widget.dart';
+import 'package:spaceloi/ui/widgets/launch_card_list.widget.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,6 +14,7 @@ class _HomePageState extends State<HomePage> {
 
   List<Launch> launches = [];
   bool isLoading = true;
+  bool isGridView = true;
 
   @override
   void initState() {
@@ -43,7 +45,8 @@ class _HomePageState extends State<HomePage> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : GridView.builder(
+          : isGridView
+          ? GridView.builder(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 10,
@@ -53,8 +56,22 @@ class _HomePageState extends State<HomePage> {
         itemBuilder: (context, index) {
           return LaunchCardGrid(launch: launches[index]);
         },
+      )
+          : ListView.builder(
+        itemCount: launches.length,
+        itemBuilder: (context, index) {
+          return LaunchCardList(launch: launches[index]);
+        },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            isGridView = !isGridView;
+          });
+        },
+        child: Icon(isGridView ? Icons.list : Icons.grid_view),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
     );
   }
 }
-

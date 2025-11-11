@@ -52,8 +52,10 @@ class Launch {
       imagesUrl: (json['links']['flickr']['original'] as List)
           .map((img) => img as String)
           .toList(),
-      id: json['id'],
+      id: json['rocket'],
     );
   }
+
+  get success => null;
 }
 

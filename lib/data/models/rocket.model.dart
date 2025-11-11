@@ -22,23 +22,23 @@ class Rocket {
   });
 
   static Rocket mock() => Rocket(
-        name: 'Falcon 9',
-        description: 'A two-stage rocket designed and manufactured by SpaceX for the reliable and safe transport of satellites and the Dragon spacecraft into orbit.',
-        height: 22.25,
-        diameter: 1.68,
-        costPerLaunch: 50000000.0,
-        successRatePct: 97.0,
-        firstFlight: DateTime(2010, 6, 4),
-        country: 'USA',
-        company: 'SpaceX',
+    name: 'Falcon 9',
+    description: 'A two-stage rocket designed and manufactured by SpaceX for the reliable and safe transport of satellites and the Dragon spacecraft into orbit.',
+    height: 22.25,
+    diameter: 1.68,
+    costPerLaunch: 50000000.0,
+    successRatePct: 97.0,
+    firstFlight: DateTime(2010, 6, 4),
+    country: 'USA',
+    company: 'SpaceX',
   );
 
   factory Rocket.fromJson(Map<String, dynamic> json) {
     return Rocket(
       name: json['name'],
       description: json['description'],
-      height: json['height'],
-      diameter: json['diameter'],
+      height: (json['height']['meters'] as num).toDouble(),
+      diameter: (json['diameter']['meters'] as num).toDouble(),
       costPerLaunch: (json['cost_per_launch'] as num).toDouble(),
       successRatePct: (json['success_rate_pct'] as num).toDouble(),
       firstFlight: DateTime.parse(json['first_flight']),
@@ -51,8 +51,8 @@ class Rocket {
     return {
       'name': name,
       'description': description,
-      'height': height,
-      'diameter': diameter,
+      'height': {'meters': height},
+      'diameter': {'meters': diameter},
       'cost_per_launch': costPerLaunch,
       'success_rate_pct': successRatePct,
       'first_flight': firstFlight.toIso8601String(),
